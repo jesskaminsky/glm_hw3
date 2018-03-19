@@ -1,0 +1,51 @@
+---
+title: "hw3"
+author: "Jess Kaminsky"
+date: "March 23, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(locfit)
+```
+
+## GELMAN HILL CHAPTER 5 - QUESTION 3
+
+```{r}
+
+```
+
+## GELMAN HILL CHAPTER 5 - QUESTION 5
+In a class of 50 students, a logistic regression is performed of course grade (passor fail) on midterm exam score (continuous values with mean 60 and standarddeviation 15). The fitted model is Pr(pass) = logit−1(−24 + 0.4x).
+
+(b)  Suppose the midterm scores were transformed to have a mean of 0 and stan-dard deviation of 1. What would be the equation of the logistic regressionusing these transformed scores as a predictor?
+
+(c) Create a new predictor that is pure noise (for example, in R you can createnewpred <- rnorm (n,0,1)). Add  it to  your model.  How much does thedeviance decrease?
+
+
+(a)  Graph the fitted model. Also on this graph put a scatterplot of hypotheticaldata consistent with the information given.
+```{r}
+model5 <- glm(y~test,family = binomial(logit))
+plot(model5)
+
+plot(data.5a, y)
+curve(plogis(expit(-24 + 0.4*x)), xlim = c(25,90))
+```
+```{r}
+glm(y~test,family = binomial(logit))
+
+```
+## GELMAN HILL CHAPTER 5 - QUESTION 8
+For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
+
+```{r}
+rodents <- read.table("rodents.txt")
+```
+
+The full dehydration outcome for the Dhaka study that we looked at in class is a three-level variable (none, some or severe). Build two proportional odds regression models for this three-level variable. In the first use the clinical signs only. In the second, add in the additional predictors. Keep variables that you feel are important to prediction and to interpretation. Interpret your results clearly.
+
+```{r}
+dhaka <- read.csv("dhaka.csv")
+attach(dhaka)
+model1 <- glm(dehyd ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine, data = dhaka, family = binomial (logit))
+```
