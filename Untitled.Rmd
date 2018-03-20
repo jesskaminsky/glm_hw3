@@ -7,45 +7,111 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(locfit)
+library(ggplot2)
+logit<-function(x) log(x/(1-x))
+library(knitr)
+
 ```
 
 ## GELMAN HILL CHAPTER 5 - QUESTION 3
 
-```{r}
+$$
 
-```
+\beta_0 = logit(0.27) = -0.9946\\
+
+logit(.88) = -0.9946 + \beta_1 * 6\\
+\beta_1 = 0.4978\\
+
+logit(y) = -0.9946 + 0.4978x\\
+y = logit^{-1}(-0.9946 + 0.4978x) = expit(-0.9946 + 0.4978x) = \frac{e^{-0.9946 + 0.4978x}}{1 + e^{-0.9946 + 0.4978x}}
+$$
 
 ## GELMAN HILL CHAPTER 5 - QUESTION 5
-In a class of 50 students, a logistic regression is performed of course grade (passor fail) on midterm exam score (continuous values with mean 60 and standarddeviation 15). The fitted model is Pr(pass) = logit−1(−24 + 0.4x).
 
-(b)  Suppose the midterm scores were transformed to have a mean of 0 and stan-dard deviation of 1. What would be the equation of the logistic regressionusing these transformed scores as a predictor?
+(a)  *Graph the fitted model. Also on this graph put a scatterplot of hypothetical data consistent with the information given.*
+```{r, echo = FALSE}
+hyp_data <- rnorm(n = 50, mean = 60, sd = 15)
+y_data <-  ifelse(hyp_data > 60, 1, 0)
 
-(c) Create a new predictor that is pure noise (for example, in R you can createnewpred <- rnorm (n,0,1)). Add  it to  your model.  How much does thedeviance decrease?
-
-
-(a)  Graph the fitted model. Also on this graph put a scatterplot of hypotheticaldata consistent with the information given.
-```{r}
-model5 <- glm(y~test,family = binomial(logit))
-plot(model5)
-
-plot(data.5a, y)
-curve(plogis(expit(-24 + 0.4*x)), xlim = c(25,90))
+q5a = function(x){expit(-24 + 0.4*x)}
+plot(q5a(1:100), type='l', xlab = "Midterm Score", ylab = "Probability of Passing Course", main = "Fitted Model: Pr(pass) = expit(−24 + 0.4x)")
+points(hyp_data, y_data)
 ```
-```{r}
-glm(y~test,family = binomial(logit))
+
+(b)  *Suppose the midterm scores were transformed to have a mean of 0 and stan-dard deviation of 1. What would be the equation of the logistic regressionusing these transformed scores as a predictor?*
+
+In logistic regression, when the x's are standardized, the intercept term disappears. The standardized coefficients can be found by multiplying the estimate of $\beta$ by the standard deviation of the x's for that coefficient. 
+$$
+Standardized \beta_0 = 0\\
+Standardized \beta_1 = \beta_1 * \sigma_{x1} = 0.4 * 15 = 6\\
+logit(y) = 6x\\
+y = logit^{-1}(6x) = expit(6x) = \frac{e^{6x}}{1 + e^{6x}}
+$$
+
+(c) When comparing the exact model predicting probability of passing from midterm score to a model with random noise added - the difference in residual deviance between the two models is 3.7e-17. We can conclude that when a pure noise predictor is added the residual deviance should not decrease at all.
+```{r, echo = FALSE}
+noise <- rnorm (100,0,1)
+
+exact_x <- seq(1,100,1)
+exact_y <- q5a(exact_x)
+
+exact_model <- glm(exact_y ~ exact_x,family = binomial(logit))
+noise_model <- glm(exact_y ~ exact_x + noise, family = binomial(logit))
+
+kable(cbind(c("Exact Model Deviance: ", "Null Model Deviance: ", "Difference in Deviance: "), c(exact_model$deviance, noise_model$deviance, noise_model$deviance - exact_model$deviance)))
 
 ```
+
+
 ## GELMAN HILL CHAPTER 5 - QUESTION 8
-For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
 
+
+8. Building a logistic regression model: the folderrodentscontains data on rodentsin a sample of New York City apartments.
+
+(a)  Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race).Combine categories as appropriate. Discuss the estimated coefficients in the model.
 ```{r}
 rodents <- read.table("rodents.txt")
+
+rodents$race <- as.factor(rodents$race)
+rodents$rodent2 <- as.factor(rodents$rodent2)
+
+rodent_presence <- glm(rodent2 ~ race,family = binomial(logit), data = rodents)
+
 ```
 
-The full dehydration outcome for the Dhaka study that we looked at in class is a three-level variable (none, some or severe). Build two proportional odds regression models for this three-level variable. In the first use the clinical signs only. In the second, add in the additional predictors. Keep variables that you feel are important to prediction and to interpretation. Interpret your results clearly.
+(b)  Add to your model some other potentially relevant predictors describing the apartment, building, and community district. Build your model using the general principles explained in Section 4.6. Discuss the coefficients for the ethnicity indicators in your model.
 
+For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
 ```{r}
+
+```
+
+## QUESTION 4
+
+The full dehydration outcome for the Dhaka study that we looked at in class is a three-level variable (none, some or severe). Build two proportional odds regression models for this three-level variable. In the first use the clinical signs only.
+
+
+# CLINICAL SIGNS ONLY
+```{r, echo = FALSE}
+library(nnet)
 dhaka <- read.csv("dhaka.csv")
 attach(dhaka)
-model1 <- glm(dehyd ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine, data = dhaka, family = binomial (logit))
+model1 <- multinom(dehyd ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine, data = dhaka)
+model1
+```
+
+# ADDITIONAL PREDICTORS
+In the second, add in the additional predictors. Keep variables that you feel are important to prediction and to interpretation. Interpret your results clearly.
+```{r}
+library(MASS)
+full_data <- na.omit(dhaka)
+
+model2 <- multinom(dehyd ~ ., data = dhaka)
+
+model3 <- multinom(dehyd ~ ., data = full_data)
+summary(model3)
+model3
+stepwise_model <- step(model3, direction = "both")
+
+stepwise_model$anova
 ```
