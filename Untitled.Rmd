@@ -10,7 +10,6 @@ library(locfit)
 library(ggplot2)
 logit<-function(x) log(x/(1-x))
 library(knitr)
-
 ```
 
 ## GELMAN HILL CHAPTER 5 - QUESTION 3
@@ -31,7 +30,13 @@ $$
 (a)  *Graph the fitted model. Also on this graph put a scatterplot of hypothetical data consistent with the information given.*
 ```{r, echo = FALSE}
 hyp_data <- rnorm(n = 50, mean = 60, sd = 15)
-y_data <-  ifelse(hyp_data > 60, 1, 0)
+
+prob_data <-  q5a(hyp_data)
+
+for(i in 1:length(prob_data)) {
+  y_data[i] <- rbinom(1,1,prob_data[i])
+}
+
 
 q5a = function(x){expit(-24 + 0.4*x)}
 plot(q5a(1:100), type='l', xlab = "Midterm Score", ylab = "Probability of Passing Course", main = "Fitted Model: Pr(pass) = expit(−24 + 0.4x)")
@@ -48,7 +53,7 @@ logit(y) = 6x\\
 y = logit^{-1}(6x) = expit(6x) = \frac{e^{6x}}{1 + e^{6x}}
 $$
 
-(c) When comparing the exact model predicting probability of passing from midterm score to a model with random noise added - the difference in residual deviance between the two models is 3.7e-17. We can conclude that when a pure noise predictor is added the residual deviance should not decrease at all.
+(c) When comparing the exact model predicting probability of passing from midterm score to a model with random noise added - the difference in residual deviance between the two models is close to 0. We can conclude that when a pure noise predictor is added the residual deviance should not decrease.
 ```{r, echo = FALSE}
 noise <- rnorm (100,0,1)
 
@@ -69,6 +74,7 @@ kable(cbind(c("Exact Model Deviance: ", "Null Model Deviance: ", "Difference in 
 8. Building a logistic regression model: the folderrodentscontains data on rodentsin a sample of New York City apartments.
 
 (a)  Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race).Combine categories as appropriate. Discuss the estimated coefficients in the model.
+
 ```{r}
 rodents <- read.table("rodents.txt")
 
@@ -76,9 +82,13 @@ rodents$race <- as.factor(rodents$race)
 rodents$rodent2 <- as.factor(rodents$rodent2)
 
 rodent_presence <- glm(rodent2 ~ race,family = binomial(logit), data = rodents)
-
 ```
 
+Below is the distribution of the race groups represented in our data set. Groups 6 and 7 are much smaller than the others. 
+
+```{r}
+hist(as.numeric(rodents$race), xlab = "Race Group", ylab = "Frequency", main = "Distribution of Race", breaks = c(0:7))
+```
 (b)  Add to your model some other potentially relevant predictors describing the apartment, building, and community district. Build your model using the general principles explained in Section 4.6. Discuss the coefficients for the ethnicity indicators in your model.
 
 For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
