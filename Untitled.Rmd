@@ -71,29 +71,53 @@ kable(cbind(c("Exact Model Deviance: ", "Null Model Deviance: ", "Difference in 
 ## GELMAN HILL CHAPTER 5 - QUESTION 8
 
 
-8. Building a logistic regression model: the folderrodentscontains data on rodentsin a sample of New York City apartments.
-
-(a)  Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race).Combine categories as appropriate. Discuss the estimated coefficients in the model.
+(a)  *Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race).Combine categories as appropriate. Discuss the estimated coefficients in the model.*
 
 ```{r}
 rodents <- read.table("rodents.txt")
 
 rodents$race <- as.factor(rodents$race)
 rodents$rodent2 <- as.factor(rodents$rodent2)
-
-rodent_presence <- glm(rodent2 ~ race,family = binomial(logit), data = rodents)
 ```
 
-Below is the distribution of the race groups represented in our data set. Groups 6 and 7 are much smaller than the others. 
+Below is the distribution of the race groups represented in our data set. Groups 6 and 7 are much smaller than the others - group 6 has only 7 subjects and group 7 has 10. We will continue the analysis by combining groups 6 and 7. 
 
-```{r}
+```{r, echo = FALSE}
 hist(as.numeric(rodents$race), xlab = "Race Group", ylab = "Frequency", main = "Distribution of Race", breaks = c(0:7))
 ```
-(b)  Add to your model some other potentially relevant predictors describing the apartment, building, and community district. Build your model using the general principles explained in Section 4.6. Discuss the coefficients for the ethnicity indicators in your model.
 
-For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
+After Combining groups 6 + 7, the distribution of race looks like the following.
+```{r, echo = FALSE}
+for(i in 1:length(rodents$race)) {
+  if(rodents$race[i] == 7) {
+    rodents$race[i] = 6
+  }
+}
+
+hist(as.numeric(rodents$race), xlab = "Race Group", ylab = "Frequency", main = "Distribution of Race - Combined Race 6 + 7", breaks = c(0:7))
+```
+
+In building a logistic regression model predicting the presence of rodents from the indicator variable for ethnic group, we obtain the following results. The predicted model is as follows with race 1 as the reference group.
+
+$$
+logit(p) = -2.1521 + 1.5361(race2) + 1.4492(race3) + 1.8671(race4) + 0.4004(race5) + 1.3636(race6)
+$$
+From the following summary of the logistic regression model, the coefficent for race5 is not significantly different from 0. The coefficient for race6 is significantly different from 0 at the $\alpha = 0.10$ level. All other predictors are statistically significant at the $\alpha = 0.05$ level.
 ```{r}
+rodent_presence <- glm(rodent2 ~ race,family = binomial(logit), data = rodents)
 
+summary(rodent_presence)
+```
+
+
+(b) For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
+```{r, echo = FALSE}
+rodent_remove <- na.omit(rodents)
+full_rodent <- glm(rodent2 ~ ., family = binomial(logit), data = rodent_remove)
+
+stepwise_rodent <- step(full_rodent)
+
+summary(stepwise_rodent)
 ```
 
 ## QUESTION 4
@@ -104,24 +128,36 @@ The full dehydration outcome for the Dhaka study that we looked at in class is a
 # CLINICAL SIGNS ONLY
 ```{r, echo = FALSE}
 library(nnet)
+library(VGAM)
+library(ordinal)
 dhaka <- read.csv("dhaka.csv")
 attach(dhaka)
-model1 <- multinom(dehyd ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine, data = dhaka)
-model1
+
+modela <- vglm(ordered(dehyd) ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine,family=cumulative, data = dhaka)
+
+summary(modela)
 ```
 
 # ADDITIONAL PREDICTORS
 In the second, add in the additional predictors. Keep variables that you feel are important to prediction and to interpretation. Interpret your results clearly.
 ```{r}
-library(MASS)
-full_data <- na.omit(dhaka)
+#library(MASS)
+#full_dhaka <- na.omit(dhaka)
 
-model2 <- multinom(dehyd ~ ., data = dhaka)
+dhaka$eyes <- as.factor(dhaka$eyes)
+dhaka$genapp <- as.factor(dhaka$genapp)
+dhaka$heart <- as.factor(dhaka$heart)
+dhaka$mucous <- as.factor(dhaka$mucous)
+dhaka$pulse <- as.factor(dhaka$pulse)
+dhaka$resp <- as.factor(dhaka$resp)
+dhaka$skin <- as.factor(dhaka$skin)
+dhaka$tears <- as.factor(dhaka$tears)
+dhaka$thirst <- as.factor(dhaka$thirst)
+dhaka$urine <- as.factor(dhaka$urine)
 
-model3 <- multinom(dehyd ~ ., data = full_data)
-summary(model3)
-model3
-stepwise_model <- step(model3, direction = "both")
+modelc <- vglm(ordered(dehyd) ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine,family=cumulative, data = dhaka)
 
-stepwise_model$anova
+modelb <- vglm(ordered(dehyd) ~ .,family=cumulative, data = full_dhaka)
+
+scale(modelb)
 ```
