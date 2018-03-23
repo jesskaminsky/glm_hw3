@@ -1,11 +1,14 @@
----
+\---
 title: "hw3"
 author: "Jess Kaminsky"
 date: "March 23, 2018"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+
+## Jess Kaminsky- Homework 3 - PHP 2514
+
+```{r setup, include=FALSE, warning= FALSE, message = FALSE}
 library(locfit)
 library(ggplot2)
 logit<-function(x) log(x/(1-x))
@@ -15,12 +18,9 @@ library(knitr)
 ## GELMAN HILL CHAPTER 5 - QUESTION 3
 
 $$
-
 \beta_0 = logit(0.27) = -0.9946\\
-
 logit(.88) = -0.9946 + \beta_1 * 6\\
 \beta_1 = 0.4978\\
-
 logit(y) = -0.9946 + 0.4978x\\
 y = logit^{-1}(-0.9946 + 0.4978x) = expit(-0.9946 + 0.4978x) = \frac{e^{-0.9946 + 0.4978x}}{1 + e^{-0.9946 + 0.4978x}}
 $$
@@ -31,14 +31,14 @@ $$
 ```{r, echo = FALSE}
 hyp_data <- rnorm(n = 50, mean = 60, sd = 15)
 
+q5a = function(x){expit(-24 + 0.4*x)}
 prob_data <-  q5a(hyp_data)
-
+y_data <- vector()
 for(i in 1:length(prob_data)) {
   y_data[i] <- rbinom(1,1,prob_data[i])
 }
 
 
-q5a = function(x){expit(-24 + 0.4*x)}
 plot(q5a(1:100), type='l', xlab = "Midterm Score", ylab = "Probability of Passing Course", main = "Fitted Model: Pr(pass) = expit(−24 + 0.4x)")
 points(hyp_data, y_data)
 ```
@@ -54,7 +54,7 @@ y = logit^{-1}(6x) = expit(6x) = \frac{e^{6x}}{1 + e^{6x}}
 $$
 
 (c) When comparing the exact model predicting probability of passing from midterm score to a model with random noise added - the difference in residual deviance between the two models is close to 0. We can conclude that when a pure noise predictor is added the residual deviance should not decrease.
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning= FALSE, message = FALSE}
 noise <- rnorm (100,0,1)
 
 exact_x <- seq(1,100,1)
@@ -73,11 +73,33 @@ kable(cbind(c("Exact Model Deviance: ", "Null Model Deviance: ", "Difference in 
 
 (a)  *Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race).Combine categories as appropriate. Discuss the estimated coefficients in the model.*
 
-```{r}
+```{r, echo = FALSE}
 rodents <- read.table("rodents.txt")
 
 rodents$race <- as.factor(rodents$race)
 rodents$rodent2 <- as.factor(rodents$rodent2)
+
+
+rodents$dilap <- as.factor(rodents$dilap)
+rodents$foreign <- as.factor(rodents$foreign)
+rodents$help <- as.factor(rodents$help)
+rodents$old <- as.factor(rodents$old)
+rodents$struct <- as.factor(rodents$struct)
+rodents$board2 <- as.factor(rodents$board2)
+rodents$intleak2 <- as.factor(rodents$intleak2)
+rodents$intpeel_cat<- as.factor(rodents$intpeel_cat)
+rodents$inthole2 <- as.factor(rodents$inthole2)
+rodents$intcrack2 <- as.factor(rodents$intcrack2)
+rodents$extflr5_2 <- as.factor(rodents$extflr5_2)
+rodents$extwin4_2 <- as.factor(rodents$extwin4_2)
+rodents$povertyx2 <- as.factor(rodents$povertyx2)
+rodents$poverty <- as.factor(rodents$poverty)
+rodents$housing <- as.factor(rodents$poverty)
+rodents$housing <- as.factor(rodents$housing)
+rodents$subsidy <- as.factor(rodents$subsidy)
+rodents$regext <- as.factor(rodents$regext)
+rodents$under6 <- as.factor(rodents$under6)
+rodents$borough <- as.factor(rodents$borough)
 ```
 
 Below is the distribution of the race groups represented in our data set. Groups 6 and 7 are much smaller than the others - group 6 has only 7 subjects and group 7 has 10. We will continue the analysis by combining groups 6 and 7. 
@@ -86,7 +108,7 @@ Below is the distribution of the race groups represented in our data set. Groups
 hist(as.numeric(rodents$race), xlab = "Race Group", ylab = "Frequency", main = "Distribution of Race", breaks = c(0:7))
 ```
 
-After Combining groups 6 + 7, the distribution of race looks like the following.
+After Combining groups 6 + 7, the distribution of race is as follows.
 ```{r, echo = FALSE}
 for(i in 1:length(rodents$race)) {
   if(rodents$race[i] == 7) {
@@ -97,53 +119,118 @@ for(i in 1:length(rodents$race)) {
 hist(as.numeric(rodents$race), xlab = "Race Group", ylab = "Frequency", main = "Distribution of Race - Combined Race 6 + 7", breaks = c(0:7))
 ```
 
-In building a logistic regression model predicting the presence of rodents from the indicator variable for ethnic group, we obtain the following results. The predicted model is as follows with race 1 as the reference group.
+In building a logistic regression model predicting the presence of rodents from the indicator variable for ethnic group, we obtain the following model with race 1 as the reference group and race6 combining subjects from race groups 6 and 7.
 
 $$
 logit(p) = -2.1521 + 1.5361(race2) + 1.4492(race3) + 1.8671(race4) + 0.4004(race5) + 1.3636(race6)
 $$
-From the following summary of the logistic regression model, the coefficent for race5 is not significantly different from 0. The coefficient for race6 is significantly different from 0 at the $\alpha = 0.10$ level. All other predictors are statistically significant at the $\alpha = 0.05$ level.
-```{r}
+From the following summary of the logistic regression model, the coefficent for race5 is not significantly different from 0. The coefficient for race6 is significantly different from 0 at the $\alpha = 0.10$ level. All other predictors are statistically significant at the $\alpha = 0.05$ level. From the model, we are able to determine the following:
+
+- Subjects that are in race group 1, have $e^{\beta _0} = e ^ {-2.1521} = 0.116$ times increased odds of having rodents compared to those that are not in race group 1. The odds of having rodents if your ethnicity is race group 1 is less that that of all other race groups.
+- Subjects that are in race group 2 have $e^{\beta _1} = e ^ {1.5361} = 4.625$ times increased odds of having rodents compared to those that are not in race group 2.
+- Subjects that are in race group 3 have $e^{\beta _2} = e ^ {1.4492} = 4.260$ times increased odds of having rodents compared to those that are not in race group 3.
+- Subjects that are in race group 4 have $e^{\beta _3} = e ^ {1.8671} = 6.469$ times increased odds of having rodents compared to those that are not in race group 4.
+- Subjects that are in race group 5 have $e^{\beta _4} = e ^ {0.4004} = 1.4924$ times increased odds of having rodents compared to those that are not in race group 5.
+- Subjects that are in race group 6 or 7 have $e^{\beta _5} = e ^ {1.3636} = 3.9102$ times increased odds of having rodents compared to those that are not in race group 6 or 7.
+
+```{r, echo = FALSE}
 rodent_presence <- glm(rodent2 ~ race,family = binomial(logit), data = rodents)
 
 summary(rodent_presence)
 ```
 
 
-(b) For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.
-```{r, echo = FALSE}
-rodent_remove <- na.omit(rodents)
-full_rodent <- glm(rodent2 ~ ., family = binomial(logit), data = rodent_remove)
+(b) *For the second part of this problem use the variables in the dataset to develop a good logistic regression model. Make sure to carefully explain what your final model means and check its fit using diagnostics. Make an ROC plot and a calibration curve.*
 
-stepwise_rodent <- step(full_rodent)
+In order to determine the most efficient logistic model for predicting the probability of rodent infestation, we will use stepwise regression with AIC. 
+The resulting model is as follows: 
+$$
+logit(p) =  -5.905 + 0.8672(personrm) - 0.0069(housewgt) + 0.2373(cd) -0.4553(regext1) + 0.3534(povertyx2) + 1.056(extflr5_2)\\ + 0.8981(intcrack2) + 0.7164(inthole2) + 0.4490(intleak2) - 0.8904(struct)  - 0.5628(help) + 2.057(blackMean) + 4.086(helpMean)\\ + 2.900(hispanicMean) + 1.4730(oldsMean) + 1.966(regextMean) + 7.509(dilapMean) - 16.29(intcrack2Mean) + 19.48(inthole2Mean) - 0.0014(bldg)
+$$
 
-summary(stepwise_rodent)
+All predictors in this model are statistically significant 
+From this model we learn:
+- While holding all older variables constant, those with regext = 1 have $e^{\beta} = e ^ {-0.4553} = 0.634$ times the odds of having a rodent infestation compared to those with regext = 0.
+- While holding all older variables constant, those with povertyx2 = 1 have $e^{\beta} = e ^ {.3534} = 1.424$ times the odds of having a rodent infestation compared to those with povertyx2 = 0.
+- While holding all older variables constant, those with struct = 1 have $e^{\beta} = e ^ {-.8904} = 0.4105$ times the odds of having a rodent infestation compared to those with povertyx2 = 0.
+- While holding all older variables constant, for every 1 unit increase in personrm the odds of having a rodent infestation will increase by a factor of $e^{\beta} = e ^ {0.8672} = 2.380$.
+
+```{r, echo = FALSE, include= FALSE, warning= FALSE, message = FALSE}
+library(pROC)
+library(ModelGood)
+library(perturb)
+rodent_na <- na.omit(rodents)
+rodent_full <- glm(rodent2 ~ ., binomial(logit), data = rodent_na)
+rodent_best <- step(rodent_full)
 ```
 
-## QUESTION 4
+```{r}
+summary(rodent_best)
+```
 
-The full dehydration outcome for the Dhaka study that we looked at in class is a three-level variable (none, some or severe). Build two proportional odds regression models for this three-level variable. In the first use the clinical signs only.
+Model Diagnostics for stepwise generated logistic regression model
 
-
-# CLINICAL SIGNS ONLY
 ```{r, echo = FALSE}
+par(mfrow = c(2,2))
+plot(rodent_best)
+```
+
+ROC Plot for stepwise generated logistic regression model
+
+```{r, echo = FALSE}
+plot(Roc(rodent_best))
+```
+
+Calibration Plot for stepwise generated logistic regression model
+
+```{r, echo = FALSE}
+calPlot2(rodent_best)
+```
+
+
+## QUESTION 4
+A summary of the results generated from building a proportional odds regression model predicting dehydration level from clinical signs is presented below.
+```{r, echo = FALSE, warning= FALSE, message = FALSE}
 library(nnet)
 library(VGAM)
 library(ordinal)
 dhaka <- read.csv("dhaka.csv")
 attach(dhaka)
 
-modela <- vglm(ordered(dehyd) ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine,family=cumulative, data = dhaka)
+for (i in 1:14) {
+  dhaka[,i] <- as.factor(dhaka[,i])
+}
+
+modela <- multinom(dehyd ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine,family=cumulative(parallel= FALSE), data = dhaka)
 
 summary(modela)
+
 ```
+The two models generated from the preceeding output are:
 
-# ADDITIONAL PREDICTORS
-In the second, add in the additional predictors. Keep variables that you feel are important to prediction and to interpretation. Interpret your results clearly.
-```{r}
-#library(MASS)
-#full_dhaka <- na.omit(dhaka)
+$$
+ln(p(dehyd = 1 / dehyd = 0)) = 0.5567 + 18.491(capref1) + 0.3599(extrem1) + 0.3831(eyes1) + 0.7384(genapp1) + 0.5551(heart1)\\ - 0.199(mucous1) + 0.6372(pulse1) + 0.6614(resp1) + 0.2426(tears1) - 1.8182(thirst1) + 0.0621(urine1)\\ + 1.3874 (eyes2) + 1.4686(genapp2) - 7.276(heart2) + 16.2398(mucous2) + 1.775 (pulse2) + 15.549(resp2) + 0.0776(tears2)\\ - 2.149(thirst2) + 0.1767(urine2)
+$$
 
+
+$$
+ln(p(dehyd = 2 / dehyd = 0)) = -15.91 - 6.612(capref1) + 0.9937(extrem1) + 0.2873(eyes1) + 0.3841(genapp1) + 0.1789(heart1)\\ + 0.4571(mucous1) + 1.0057(pulse1) + 0.2343(resp1)+ 0.1759(tears1) + 11.984(thirst1) + 1.0264(urine1)\\ + 2.127(eyes2) + 1.7614(genapp2) + 24.3814(heart2) - 14.599(mucous2) + 2.0298(pulse2) + 15.1141(resp2) 0.9697(tears2)\\ + 12.0042(thirst2) + 0.5792(urine2)
+$$
+
+We can interpret from these models that:
+- Patients with extrem = 1 have $e^{\beta _{extrem}} = e ^ {0.3599} = 1.4332$ times the risk of being dehyd = 1 compared to deyd = 0.
+- Patients with extrem = 1 have $e^{\beta _{extrem}} = e ^ {0.9937} = 2.70121$ times the risk of being dehyd = 2 compared to deyd = 0.
+
+- Patients with genapp = 1 have $e^{\beta _{genapp}} = e ^ {0.7384} = 2.092$ times the risk of being dehyd = 1 compared to deyd = 0.
+- Patients with genapp = 1 have $e^{\beta _{genapp}} = e ^ {0.3841} = 1.46$ times the risk of being dehyd = 2 compared to deyd = 0.
+
+- Patients with tears = 1 have $e^{\beta _{tears}} = e ^ {0.2426} = 1.274$ times the risk of being dehyd = 1 compared to deyd = 0.
+- Patients with tears = 1 have $e^{\beta _{tears}} = e ^ {0.1759} = 1.192$ times the risk of being dehyd = 2 compared to deyd = 0.
+
+For my final model, I have decided to include all clinical signs as well as the variables for number of episodes and days of diarrhea. Based on our outcome - dehydration - I have also chosen to include episodes and diarrhea because they seem like logical predictors.
+
+A summary of the 2 resulting proportional odds models are shown below. This model fits slightly better than the model with clinical signs only - the residual deviance has decreased.
+```{r, echo = FALSE}
 dhaka$eyes <- as.factor(dhaka$eyes)
 dhaka$genapp <- as.factor(dhaka$genapp)
 dhaka$heart <- as.factor(dhaka$heart)
@@ -155,9 +242,23 @@ dhaka$tears <- as.factor(dhaka$tears)
 dhaka$thirst <- as.factor(dhaka$thirst)
 dhaka$urine <- as.factor(dhaka$urine)
 
-modelc <- vglm(ordered(dehyd) ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine,family=cumulative, data = dhaka)
+modelb <- multinom(ordered(dehyd) ~ capref + extrem + eyes + genapp + heart + mucous + pulse + resp + tears + thirst + urine + daysofdiar + episodes,family=cumulative(parallel=TRUE), data = dhaka)
 
-modelb <- vglm(ordered(dehyd) ~ .,family=cumulative, data = full_dhaka)
+summary(modelb)
 
-scale(modelb)
 ```
+
+From the model above, we can interpret the following:
+
+- Patients with eyes = 1 have $e^{\beta _{eyes}} = e ^ {0.4071} = 1.5024$ times the risk of being dehyd = 1 compared to deyd = 0.
+- Patients with eyes = 1 have $e^{\beta _{eyes}} = e ^ {0.3444} = 1.4111$ times the risk of being dehyd = 2 compared to deyd = 0.
+
+- Patients with eyes = 2 have $e^{\beta _{eyes}} = e ^ {1.5046} = 4.5024$ times the risk of being dehyd = 1 compared to deyd = 0.
+- Patients with eyes = 2 have $e^{\beta _{eyes}} = e ^ {2.3241} = 10.2175$ times the risk of being dehyd = 2 compared to deyd = 0.
+
+- For every 1 unit increase in days of diarrhea, the risk of being dehyd = 1 increases by a factor of $e^{\beta _{daysofdiar}} = e ^ {-0.0817} = 0.9215$ compared to dehyd = 0
+- For every 1 unit increase in days of diarrhea, the risk of being dehyd = 2 increases by a factor of $e^{\beta _{daysofdiar}} = e ^ {-0.1320} = 0.8763$ compared to dehyd = 0
+
+
+- For every 1 unit increase in episodes, the risk of being dehyd = 1 increases by a factor of $e^{\beta _{episodes}} = e ^ {0.0351} = 1.0357$ compared to dehyd = 0
+- For every 1 unit increase in episodes, the risk of being dehyd = 2 increases by a factor of $e^{\beta _{episodes}} = e ^ {0.0669} = 1.0692$ compared to dehyd = 0
